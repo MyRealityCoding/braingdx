@@ -23,9 +23,13 @@ import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenCallback;
 import aurelienribon.tweenengine.TweenEquations;
 import aurelienribon.tweenengine.TweenManager;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import de.bitbrain.braingdx.assets.SharedAssetManager;
 import de.bitbrain.braingdx.tweens.MusicTween;
 import de.bitbrain.braingdx.tweens.SharedTweenManager;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This audio manager implementation provides utility methods to fade between different music and
@@ -44,6 +48,9 @@ public class AudioManager {
    private final static AssetManager ASSET_MANAGER = SharedAssetManager.getInstance();
 
    private float volume = DEFAULT_VOLUME;
+   
+   private HashMap<String, Sound> soundMap = new HashMap<String, Sound>();
+   
 
    public AudioManager() {
       Tween.registerAccessor(MusicClassWrapper.class, new MusicTween());
@@ -124,6 +131,44 @@ public class AudioManager {
    public void pauseMusic(String path) {
       ASSET_MANAGER.get(path, Music.class).pause();
    }
+   
+    public void playSound(String key, String path) {
+      startSound(key, path, false);
+   }
+   
+   public void loopSound(String key, String path) {
+       startSound(key, path, true);
+   }
+   
+   public void stopSound(String key) {
+      if(soundMap.get(key) != null) {
+         soundMap.get(key).stop();
+      }
+   }
+   
+   public void stopAllSounds() {
+      for( Map.Entry<String, Sound> entry: soundMap.entrySet()) {
+         if(entry.getValue() != null) {
+            entry.getValue().stop();
+         }
+      }
+   }
+   
+   private void startSound(String key, String path, boolean loop) {
+      if (soundMap.get(key) != null) {
+         throw new RuntimeException("Sound: key: " + key + " path: " + path + " already playing");
+      }
+
+      Sound sound = Gdx.audio.newSound(Gdx.files.internal(path));
+      soundMap.put(key, sound);
+      if (loop) {
+         sound.loop();
+      }
+      else {
+         sound.play();
+      }
+   }
+
 
    private static class MusicClassWrapper implements Music {
 
@@ -199,4 +244,6 @@ public class AudioManager {
       }
 
    }
+   
+   
 }
